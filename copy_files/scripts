@@ -1,1 +1,57 @@
 
+FILE ORGANIZATION 
+========================================================	
+copy files to another directory based on partial filename matching. Use bash script
+
+			#!/bin/bash
+
+			# Input file
+			INPUT_FILE="Sample_Allocation_LongCovid.txt"
+
+			# Destination folder
+			DEST_FOLDER="new_folder"
+
+			# Read the file line by line
+			while IFS=$'\t' read -r prefix _; do
+			    # Check if the line has a prefix and avoid empty lines
+			    if [[ -n "$prefix" ]]; then
+			        # Search for files matching the prefix
+			        files=($(ls | grep "^$prefix"))
+        
+			        # Check if any files matched
+			        if [ ${#files[@]} -gt 0 ]; then
+			            for file in "${files[@]}"; do
+			                # Copy each matching file to the destination folder
+			                cp "$file" "$DEST_FOLDER"
+			                echo "Copied: $file"
+			            done
+			        else
+			            echo "No files found for prefix: $prefix"
+			        fi
+			    fi
+			done < "$INPUT_FILE"
+	
+
+`while IFS=$'\t'` while = loop in bash over lines in tab-delimited files
+	`IFS` internal field separator = split input into the fields
+	`$'\t'` set the separator to a TAB character
+	
+`read ` Reads a line of input and splits it into fields based on the IFS value. `-r` prevents Bash from interpreting backslashes (\) as escape characters. This is useful when dealing with filenames or text containing backslashes.
+
+`prefix` captures the first field from the input (the filename in your file)
+
+ `_` A throwaway variable to capture the rest of the line without assigning it to a meaningful variable. This avoids cluttering the script with unnecessary variables. 
+ 
+ `[[ -n "$prefix" ]]` -n is a test operator that checks if a string is non-empty. In this context, it ensures the prefix variable is not empty before proceeding. This avoids unnecessary or erroneous operations if the prefix is blank.
+ 
+`files=($(ls | grep "^$prefix"))` list all files in current directory, filters the output  of ls to match only files whose names start with the value of prefix, each matching filename is stored as an element in thefiles array
+ 
+
+
+
+
+make it executable: `chmod +x copy_matching_files.sh`
+
+and 
+
+run: `./copy_matching_files.sh`
