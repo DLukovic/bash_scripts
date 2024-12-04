@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Step 1: Create folders
+folders=("Card" "CardioTox" "Healthy" "NonCardioTox" "Pulmo")
+for folder in "${folders[@]}"; do
+    mkdir -p "$folder"
+done
+
+echo "Folders created: ${folders[*]}"
+
+# Step 2: Input file check
+input_file="SampleAllocationP2023-126-MET-LB.txt" # Replace with the actual input file name
+if [[ ! -f $input_file ]]; then
+    echo "Error: Input file '$input_file' not found!"
+    exit 1
+fi
+
+# Step 3: Process .bam files
+found_matches=0
+for bam_file in *.bam; do
+    if [[ -f $bam_file ]]; then
+        bam_id="${bam_file%%.*}" # Extract ID from the .bam file name (before the first dot)
+        echo "Processing file: $bam_file (ID: $bam_id)"
+        while IFS=$'\t' read -r id col2 folder_hint; do
+            if [[ $bam_id == "$id" ]]; then
+                # Extract the base folder name from folder_hint (e.g., "Pulmo 5" -> "Pulmo")
+                base_folder=$(echo "$folder_hint" | awk '{print $1}')
+                for folder in "${folders[@]}"; do
+                    if [[ $base_folder == "$folder" ]]; then
+                        cp "$bam_file" "$folder/"
+                        echo "Copied '$bam_file' to '$folder/'"
+                        found_matches=1
+                    fi
+                done
+            fi
+        done < "$input_file"
+    fi
+done
+
+# Final feedback
+if [[ $found_matches -eq 0 ]]; then
+    echo "No matches found between .bam files and IDs in the input file."
+else
+    echo "Matching and copying completed successfully."
+fi
